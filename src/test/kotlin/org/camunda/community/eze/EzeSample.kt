@@ -3,31 +3,20 @@ package org.camunda.community.eze
 import io.camunda.zeebe.client.ZeebeClient
 import io.camunda.zeebe.client.api.response.DeploymentEvent
 import io.camunda.zeebe.model.bpmn.Bpmn
+import io.camunda.zeebe.protocol.record.intent.TimerIntent
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
+import org.camunda.community.eze.RecordStream.withIntent
 import org.junit.jupiter.api.Test
+import java.time.Duration
 import java.util.concurrent.Future
 
+@EmbeddedZeebeEngine
 class EzeSample {
 
-    lateinit var zeebe: ZeebeEngine
     lateinit var client: ZeebeClient
-
-    @BeforeEach
-    fun `start Zeebe and create a client`() {
-        zeebe = EngineFactory.create()
-        zeebe.start()
-
-        client = zeebe.createClient()
-    }
-
-    @AfterEach
-    fun `clean up`() {
-        client.close()
-        zeebe.stop()
-    }
+    lateinit var recordStream: RecordStreamSource
+    lateinit var clock: ZeebeEngineClock
 
     @Test
     fun `should deploy process`() {
@@ -109,6 +98,45 @@ class EzeSample {
         assertThat(processInstanceResult.variablesAsMap)
             .containsEntry("x", 1)
             .containsEntry("y", 2)
+    }
+
+    @Test
+    fun `should inject clock`() {
+        // given
+        client.newDeployCommand()
+            .addProcessModel(
+                Bpmn.createExecutableProcess("process")
+                    .startEvent()
+                    .intermediateCatchEvent()
+                    .timerWithDuration("PT1H")
+                    .zeebeOutputExpression("true", "done")
+                    .endEvent()
+                    .done(), "process.bpmn"
+            )
+            .send()
+            .join()
+
+        val processInstanceResult = client.newCreateInstanceCommand()
+            .bpmnProcessId("process")
+            .latestVersion()
+            .withResult()
+            .send()
+
+        await.untilAsserted {
+            val timerCreated = recordStream
+                .timerRecords()
+                .withIntent(TimerIntent.CREATED)
+                .firstOrNull()
+
+            assertThat(timerCreated).isNotNull
+        }
+
+        // when
+        clock.increaseTime(Duration.ofDays(1))
+
+        // then
+        assertThat(processInstanceResult.join().variablesAsMap)
+            .containsEntry("done", true)
     }
 
 }
