@@ -58,6 +58,12 @@
       </dependency>
 
       <dependency>
+        <groupId>io.camunda</groupId>
+        <artifactId>zeebe-test</artifactId>
+        <version>${zeebe.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>io.zeebe</groupId>
         <artifactId>zeebe-test-container</artifactId>
         <version>3.0.0</version>
@@ -132,6 +138,12 @@
     <dependency>
       <groupId>io.camunda</groupId>
       <artifactId>zeebe-client-java</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.camunda</groupId>
+      <artifactId>zeebe-test</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -214,7 +226,6 @@
       <artifactId>kotlin-stdlib-jdk8</artifactId>
       <version>${kotlin.version}</version>
     </dependency>
-
   </dependencies>
 
   <build>
