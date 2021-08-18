@@ -12,7 +12,7 @@ import java.time.Duration
 import java.util.concurrent.Future
 
 @EmbeddedZeebeEngine
-class EzeSample {
+class EzeSampleTest {
 
     lateinit var client: ZeebeClient
     lateinit var recordStream: RecordStreamSource
