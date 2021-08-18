@@ -12,7 +12,7 @@ import org.junit.Rule
 import org.junit.Test
 import java.util.concurrent.Future
 
-class EmbeddedBrokerSample {
+class EmbeddedBrokerSampleTest {
 
     @Rule @JvmField
     public val testRule: ZeebeTestRule = ZeebeTestRule()
